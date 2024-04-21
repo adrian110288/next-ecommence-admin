@@ -5,22 +5,23 @@ import Link from "next/link";
 import {ArrowRight} from "lucide-react";
 import {ProductCard, ProductCardSkeleton} from "@/components/ProductCard";
 import {Suspense} from "react";
+import {cache} from "@/lib/cache";
 
-async function getMostPopularProducts() {
+const getMostPopularProducts = cache(() => {
     return db.product.findMany({
         where: {isAvailableForPurchase: true},
         orderBy: {orders: {_count: 'desc'}},
         take: 6
     })
-}
+}, ["/", "most-popular-products"], {revalidate: 60 * 60 * 24})
 
-async function getNewestProducts() {
+const getNewestProducts = cache(() => {
     return db.product.findMany({
         where: {isAvailableForPurchase: true},
         orderBy: {createdAt: 'desc'},
         take: 6
     })
-}
+}, ["/", "newest-products"])
 
 export default function HomePage() {
     return (
@@ -51,12 +52,12 @@ function ProductGridSection({productFetcher, title}: ProductGridSectionProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <Suspense fallback={
                     <>
-                        <ProductCardSkeleton />
-                        <ProductCardSkeleton />
-                        <ProductCardSkeleton />
+                        <ProductCardSkeleton/>
+                        <ProductCardSkeleton/>
+                        <ProductCardSkeleton/>
                     </>
                 }>
-                    <ProductSuspense productFetcher={productFetcher} />
+                    <ProductSuspense productFetcher={productFetcher}/>
                 </Suspense>
             </div>
         </div>
